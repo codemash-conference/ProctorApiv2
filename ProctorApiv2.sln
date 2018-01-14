@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26730.10
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProctorApiv2", "ProctorApiv2\ProctorApiv2.csproj", "{BBA150C4-68B4-4CFE-8A32-B5CE44DBEB9B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProctorApiv2Tests", "..\ProctorApiv2Tests\ProctorApiv2Tests.csproj", "{A0346454-B3A6-4296-9F17-1AB196CB76EE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BBA150C4-68B4-4CFE-8A32-B5CE44DBEB9B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BBA150C4-68B4-4CFE-8A32-B5CE44DBEB9B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BBA150C4-68B4-4CFE-8A32-B5CE44DBEB9B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BBA150C4-68B4-4CFE-8A32-B5CE44DBEB9B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A0346454-B3A6-4296-9F17-1AB196CB76EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0346454-B3A6-4296-9F17-1AB196CB76EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0346454-B3A6-4296-9F17-1AB196CB76EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0346454-B3A6-4296-9F17-1AB196CB76EE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A34E2064-2794-42AD-BB43-CDFE6090D5CD}
+	EndGlobalSection
+EndGlobal
