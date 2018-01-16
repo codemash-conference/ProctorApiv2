@@ -27,8 +27,11 @@ namespace ProctorApiv2.Models
         public bool IsActive { get; set; }
         public string Gravatar { get; set; }
         public string CellNumber { get; set; }
-        [NotMapped]
-        public virtual List<Session> Sessions { get; set; }
+        [ForeignKey("Id")]
+        public List<Session> Sessions { get; set; }
+
+        [ForeignKey("UserId")]
+        public List<UserCheckIn> ProctorCheckIns { get; set; }
 
     }
 }

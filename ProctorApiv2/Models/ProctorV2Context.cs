@@ -16,6 +16,15 @@ namespace ProctorApiv2.Models
         {
         }
 
+        public DbSet<Session> Sessions { get; set; }
+        public DbSet<Speaker> Speakers { get; set; }
+        public DbSet<Room> Rooms { get; set; }
+        public DbSet<Tag> Tags { get; set; }
+        public DbSet<UserCheckIn> UserCheckIns { get; set; }
+        public DbSet<ScheduleException> ScheduleExceptions { get; set; }
+        public DbSet<SessionType> SessionType { get; set; }
+
+
         public static ProctorV2Context Create()
         {
             return new ProctorV2Context();

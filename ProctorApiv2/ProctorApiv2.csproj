@@ -230,7 +230,10 @@
     <Compile Include="Areas\HelpPage\SampleGeneration\TextSample.cs" />
     <Compile Include="Areas\HelpPage\XmlDocumentationProvider.cs" />
     <Compile Include="Controllers\HomeController.cs" />
-    <Compile Include="Controllers\ValuesController.cs" />
+    <Compile Include="Controllers\RolesController.cs" />
+    <Compile Include="Controllers\RoomsController.cs" />
+    <Compile Include="Controllers\SessionsController.cs" />
+    <Compile Include="Controllers\UsersController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -238,16 +241,45 @@
     <Compile Include="Migrations\201801141401049_initial.Designer.cs">
       <DependentUpon>201801141401049_initial.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201801141557484_Functions.cs" />
+    <Compile Include="Migrations\201801141557484_Functions.Designer.cs">
+      <DependentUpon>201801141557484_Functions.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201801141600393_Stored Procedures.cs" />
+    <Compile Include="Migrations\201801141600393_Stored Procedures.Designer.cs">
+      <DependentUpon>201801141600393_Stored Procedures.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201801160043359_Updated Table Structure.cs" />
+    <Compile Include="Migrations\201801160043359_Updated Table Structure.Designer.cs">
+      <DependentUpon>201801160043359_Updated Table Structure.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\ProctorV2Context.cs" />
+    <Compile Include="Models\Role.cs" />
+    <Compile Include="Models\Room.cs" />
+    <Compile Include="Models\ScheduleException.cs" />
     <Compile Include="Models\Session.cs" />
+    <Compile Include="Models\SessionType.cs" />
+    <Compile Include="Models\Speaker.cs" />
+    <Compile Include="Models\Tag.cs" />
     <Compile Include="Models\User.cs" />
+    <Compile Include="Models\UserCheckIn.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Providers\ApplicationOAuthProvider.cs" />
+    <Compile Include="Repositories\RolesRepository.cs" />
+    <Compile Include="Repositories\RoomsRepository.cs" />
+    <Compile Include="Repositories\SessionsRepository.cs" />
+    <Compile Include="Repositories\UsersRepository.cs" />
+    <Compile Include="Repositories\BaseSqlRepository.cs" />
     <Compile Include="Utils\Configuration.cs" />
     <Compile Include="Providers\JWTFormat.cs" />
     <Compile Include="StartUp.cs" />
     <Compile Include="Utils\ApplicationUserManager.cs" />
+    <Compile Include="Utils\Mappings.cs" />
+    <Compile Include="ViewModels\PasswordReset.cs" />
+    <Compile Include="ViewModels\SessionImport.cs" />
+    <Compile Include="ViewModels\SessionResult.cs" />
+    <Compile Include="ViewModels\SpeakerImport.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Areas\HelpPage\HelpPage.css" />
@@ -320,6 +352,15 @@
   <ItemGroup>
     <EmbeddedResource Include="Migrations\201801141401049_initial.resx">
       <DependentUpon>201801141401049_initial.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201801141557484_Functions.resx">
+      <DependentUpon>201801141557484_Functions.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201801141600393_Stored Procedures.resx">
+      <DependentUpon>201801141600393_Stored Procedures.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201801160043359_Updated Table Structure.resx">
+      <DependentUpon>201801160043359_Updated Table Structure.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
