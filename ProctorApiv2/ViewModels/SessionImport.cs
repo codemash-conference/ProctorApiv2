@@ -16,6 +16,7 @@ namespace ProctorApiv2.ViewModels
     public class SessionImport
     {
         public int Id { get; set; }
+        public int FeedSessionId { get; set; }
         public DateTime SessionTime { get; set; }
         public DateTime SessionStartTime { get; set; }
         public DateTime SessionEndTime { get; set; }

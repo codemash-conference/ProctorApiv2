@@ -266,9 +266,13 @@
     <Compile Include="Models\UserCheckIn.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Providers\ApplicationOAuthProvider.cs" />
+    <Compile Include="Repositories\ProctorCheckInsRepository.cs" />
     <Compile Include="Repositories\RolesRepository.cs" />
     <Compile Include="Repositories\RoomsRepository.cs" />
     <Compile Include="Repositories\SessionsRepository.cs" />
+    <Compile Include="Repositories\SessionTypesRepository.cs" />
+    <Compile Include="Repositories\SpeakersRepository.cs" />
+    <Compile Include="Repositories\TagsRepository.cs" />
     <Compile Include="Repositories\UsersRepository.cs" />
     <Compile Include="Repositories\BaseSqlRepository.cs" />
     <Compile Include="Utils\Configuration.cs" />

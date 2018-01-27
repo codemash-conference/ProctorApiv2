@@ -47,5 +47,8 @@ namespace ProctorApiv2.Models
         public List<UserCheckIn> ProctorCheckIns { get; set; }
         [ForeignKey("Id")]
         public List<User> Assignees { get; set; }
+
+        [NotMapped]
+        public int SessionType_Id { get; set; }
     }
 }

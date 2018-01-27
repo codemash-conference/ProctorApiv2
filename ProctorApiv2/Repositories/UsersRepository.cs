@@ -65,5 +65,14 @@ namespace ProctorApiv2.Repositories
 
             });
         }
+
+        public List<User> GetBySessionId(int sessionId)
+        {
+            var spName = "UserGetBySessionId";
+            List<SqlParameter> parms = new List<SqlParameter>();
+            parms.Add(IntegerParameter("sessionId", sessionId));
+            List<User> users = GetFromSQL<User>(_connStr, spName, AutoConvert<User>, parms);
+            return users;
+        }
     }
 }

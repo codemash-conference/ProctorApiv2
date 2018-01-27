@@ -249,6 +249,28 @@ namespace ProctorApiv2.Repositories
             }
         }
 
+        public int ExecuteScalerStatement(string connStr, Action<SqlConnection, SqlCommand> f)
+        {
+            using (SqlConnection conn = new SqlConnection(connStr))
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                conn.Open();
+                cmd.Connection = conn;
+
+                f(conn, cmd);
+
+                if (string.IsNullOrEmpty(cmd.CommandText))
+                {
+                    throw new Exception("Please enter command text");
+                }
+
+                var result = cmd.ExecuteScalar();
+                return Convert.ToInt32(result);
+            }
+        }
+
+
         public T AutoConvert<T>(SqlDataReader reader) where T : new()
         {
             T ret = new T();
@@ -262,7 +284,15 @@ namespace ProctorApiv2.Repositories
 
                 if (pi != null && v != DBNull.Value)
                 {
-                    pi.SetValue(ret, Convert.ChangeType(v, pi.PropertyType), null);
+                    if (Nullable.GetUnderlyingType(pi.PropertyType) == null)
+                    {
+                        pi.SetValue(ret, Convert.ChangeType(v, pi.PropertyType), null);
+                    }
+                    else
+                    {
+                        //Property is a nullable type.
+                        pi.SetValue(ret, Convert.ChangeType(v, Nullable.GetUnderlyingType(pi.PropertyType)), null);
+                    }
                 }
             }
 

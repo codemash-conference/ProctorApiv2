@@ -7,6 +7,7 @@ namespace ProctorApiv2.Migrations
     {
         public override void Up()
         {
+            //User
             CreateStoredProcedure("dbo.UserDelete", c => new { userId = c.String() }, UserDeleteSql);
             CreateStoredProcedure("dbo.UserGetAll", c => new { }, UserGetAllSql);
             CreateStoredProcedure("dbo.UserGetById", c => new { userId = c.String() }, UserGetByIdSql);
@@ -17,7 +18,9 @@ namespace ProctorApiv2.Migrations
                                                                 CellNumber = c.String(),
                                                                 Email = c.String(),
                                                                 UserName = c.String()}, UserUpdateSql);
+            CreateStoredProcedure("dbo.UserGetBySessionId", c => new { SessionId = c.Int() }, UserGetBySessionIdSql);
 
+            //Role
             CreateStoredProcedure("dbo.RoleDelete", c => new { roleId = c.String() }, RoleDeleteSql);
             CreateStoredProcedure("dbo.RoleGetAll", c => new { }, RoleGetAllSql);
             CreateStoredProcedure("dbo.RoleGetById", c => new { roleId = c.String() }, RoleGetByIdSql);
@@ -27,41 +30,67 @@ namespace ProctorApiv2.Migrations
             CreateStoredProcedure("dbo.RoleAddUser", c => new { userId = c.String(), roleId = c.String() }, RoleAddUserSql);
             CreateStoredProcedure("dbo.RoleRemoveUser", c => new { userId = c.String(), roleId = c.String() }, RoleRemoveUserSql);
 
+            //Room
             CreateStoredProcedure("dbo.RoomGetAll", c => new { }, RoomGetAllSql);
+            CreateStoredProcedure("dbo.RoomGetBySessionId", c => new { SessionId = c.Int() }, RoomGetBySessionIdSql);
 
-            CreateStoredProcedure("dbo.SpeakerUpsert", c => new {   Biography = c.String(),
-                                                                    BlogUrl = c.String(),
-                                                                    FirstName = c.String(),
-                                                                    GitHubLink = c.String(),
-                                                                    GravatarUrl = c.String(),
+            //Speaker
+            CreateStoredProcedure("dbo.SpeakerUpsert", c => new {   Biography = c.String(defaultValue:"null"),
+                                                                    BlogUrl = c.String(defaultValue: "null"),
+                                                                    FirstName = c.String(defaultValue: "null"),
+                                                                    GitHubLink = c.String(defaultValue: "null"),
+                                                                    GravatarUrl = c.String(defaultValue: "null"),
                                                                     Id = c.String(),
-                                                                    LastName = c.String(),
-                                                                    LinkedInProfile = c.String(),
-                                                                    TwitterLink = c.String()}, SpeakerUpsertSql);
+                                                                    LastName = c.String(defaultValue: "null"),
+                                                                    LinkedInProfile = c.String(defaultValue: "null"),
+                                                                    TwitterLink = c.String(defaultValue: "null")
+            }, SpeakerUpsertSql);
+            CreateStoredProcedure("dbo.SpeakerGetBySessionId", c => new { SessionId = c.Int() }, SpeakerGetBySessionIdSql);
 
-            CreateStoredProcedure("dbo.SessionUpsert", c => new {   Abstract = c.String(),
-                                                                    Category = c.String(),
+            //Session
+            CreateStoredProcedure("dbo.SessionUpsert", c => new {   Abstract = c.String(defaultValue: "null"),
+                                                                    Category = c.String(defaultValue: "null"),
                                                                     Id = c.Int(),
-                                                                    SessionEndTime = c.DateTime(),
-                                                                    SessionStartTime = c.DateTime(),
-                                                                    SessionTime = c.DateTime(),
-                                                                    SessionType = c.String(),
-                                                                    Title = c.String(),
-                                                                    Rooms = c.String(),
-                                                                    Tags = c.String(),
-                                                                    Speakers = c.String()}, SessionUpsertSql);
+                                                                    FeedSessionId = c.Int(defaultValue: null),
+                                                                    SessionEndTime = c.DateTime(defaultValue: null),
+                                                                    SessionStartTime = c.DateTime(defaultValue: null),
+                                                                    SessionTime = c.DateTime(defaultValue: null),
+                                                                    SessionType = c.String(defaultValue: "null"),
+                                                                    Title = c.String(defaultValue: "null"),
+                                                                    Rooms = c.String(defaultValue: "null"),
+                                                                    Tags = c.String(defaultValue: "null"),
+                                                                    Speakers = c.String(defaultValue: "null")
+            }, SessionUpsertSql);
+            CreateStoredProcedure("dbo.SessionGetAll", c => new { }, SessionGetAllSql);
+            CreateStoredProcedure("dbo.SessionGetAllForUser", c => new { UserId = c.String() }, SessionGetAllForUserSql);
+            CreateStoredProcedure("dbo.SessionGetById", c => new { SessionId = c.Int() }, SessionGetByIdSql);
+            CreateStoredProcedure("dbo.SessionGetAllInfo", c => new { }, SessionGetAllInfoSql);
+            CreateStoredProcedure("dbo.SessionAssignUser", c => new { UserId = c.String(), SessionId = c.Int() }, SessionAssignUserSql);
+            CreateStoredProcedure("dbo.SessionUnassignUser", c => new { UserId = c.String(), SessionId = c.Int() }, SessionUnassignUserSql);
 
+            //Session Type
+            CreateStoredProcedure("dbo.SessionTypeGetBySessionId", c => new { SessionTypeId = c.Int() }, SessionTypeGetBySessionIdSql);
 
+            //Tag
+            CreateStoredProcedure("dbo.TagGetBySessionId", c => new { SessionId = c.Int() }, TagGetBySessionIdSql);
+
+            //UserCheckIn
+            CreateStoredProcedure("dbo.UserCheckInGetBySessionId", c => new { SessionId = c.Int() }, UserCheckInGetBySessionIdSql);
+
+            //Helper
             CreateStoredProcedure("dbo.AutoAssignUsersToSessions", c => new { }, AutoAssignUsersToSessionsSql);
         }
         
         public override void Down()
         {
+            //User
             DropStoredProcedure("dbo.UserDelete");
             DropStoredProcedure("dbo.UserGetAll");
             DropStoredProcedure("dbo.UserGetById");
             DropStoredProcedure("dbo.UserUpdate");
+            DropStoredProcedure("dbo.UserGetBySessionId");
 
+            //Role
             DropStoredProcedure("dbo.RoleDelete");
             DropStoredProcedure("dbo.RoleGetAll");
             DropStoredProcedure("dbo.RoleGetById");
@@ -71,12 +100,33 @@ namespace ProctorApiv2.Migrations
             DropStoredProcedure("dbo.RoleAddUser");
             DropStoredProcedure("dbo.RoleRemoveUser");
 
+            //Room
             DropStoredProcedure("dbo.RoomGetAll");
+            DropStoredProcedure("dbo.RoomGetBySessionId");
 
+            //Speaker
             DropStoredProcedure("dbo.SpeakerUpsert");
+            DropStoredProcedure("dbo.SpeakerGetBySessionId");
 
+            //Session
             DropStoredProcedure("dbo.SessionUpsert");
+            DropStoredProcedure("dbo.SessionGetAll");
+            DropStoredProcedure("dbo.SessionGetAllForUser");
+            DropStoredProcedure("dbo.SessionGetById");
+            DropStoredProcedure("dbo.SessionGetAllInfo");
+            DropStoredProcedure("dbo.SessionAssignUser");
+            DropStoredProcedure("dbo.SessionUnassignUser");
 
+            //SessionType
+            DropStoredProcedure("dbo.SessionTypeGetBySessionId");
+            
+            //Tag
+            DropStoredProcedure("dbo.TagGetBySessionId");
+
+            //UserCheckIn
+            DropStoredProcedure("dbo.UserCheckInGetBySessionId");
+
+            //Helper
             DropStoredProcedure("dbo.AutoAssignUsersToSessions");
         }
         
@@ -102,10 +152,16 @@ namespace ProctorApiv2.Migrations
 	                                    SELECT * INTO #user FROM dbo.AspNetUsers anu WHERE Id = @userId
 	                                    DELETE FROM dbo.AspNetUsers WHERE Id = @userId
 	                                    SELECT * FROM #user";
+
+        const string UserGetBySessionIdSql = @"	SET NOCOUNT ON;
+	                                    SELECT * FROM dbo.AspNetUsers anu
+		                                    INNER JOIN dbo.UserSessions us
+			                                    ON us.User_Id = anu.Id
+	                                    WHERE us.Session_Id = @SessionId";
         #endregion
 
         #region Role
-        const string RoleDeleteSql = @"	SET NOCOUNT ON;
+        const string RoleDeleteSql = @"    SET NOCOUNT ON;
                                     	DELETE FROM dbo.AspNetRoles WHERE Id = @roleId";
 
         const string RoleGetAllSql = @"	SET NOCOUNT ON;
@@ -145,9 +201,22 @@ namespace ProctorApiv2.Migrations
         #region Room
         const string RoomGetAllSql = @" SET NOCOUNT ON;
 	                                    SELECT * FROM dbo.Rooms Order By Name";
+
+        const string RoomGetBySessionIdSql = @"	SET NOCOUNT ON;
+	                                    SELECT * FROM dbo.Rooms r
+		                                    INNER JOIN dbo.SessionRooms sr
+			                                    ON sr.Room_Id = r.Id
+	                                    WHERE sr.Session_Id = @SessionId";
+
         #endregion
 
         #region Speaker
+        const string SpeakerGetBySessionIdSql = @"  SET NOCOUNT ON;
+	                                        SELECT * FROM dbo.Speakers s
+		                                        INNER JOIN dbo.SpeakerSessions ss
+			                                        ON ss.Speaker_Id = s.Id
+	                                        WHERE ss.Session_Id = @SessionId";
+
         const string SpeakerUpsertSql = @"SET NOCOUNT ON;
 	                                        IF (SELECT 1 FROM Speakers WHERE Id = @Id) = 1
 	                                        BEGIN
@@ -195,101 +264,256 @@ namespace ProctorApiv2.Migrations
         #endregion
 
         #region Session
-        const string SessionUpsertSql = @"SET NOCOUNT ON;
+        const string SessionGetAllSql = @"SET NOCOUNT ON;
+	                                    SELECT
+		                                    s.Id
+                                          , s.FeedSessionId
+                                          , s.SessionTime
+                                          , s.SessionStartTime
+                                          , s.SessionEndTime
+                                          , s.Title
+                                          , s.Abstract
+                                          , s.Category
+                                          , s.VolunteersRequired
+                                          , s.ActualSessionStartTime
+                                          , s.ActualSessionEndTime
+                                          , s.Attendees10
+                                          , s.Attendees50
+                                          , s.Notes
+                                          , s.SessionType_Id
+	                                    FROM dbo.Sessions s";
+
+        const string SessionGetByIdSql = @"
+SET NOCOUNT ON;
+	SELECT
+		s.Id
+      , s.FeedSessionId
+      , s.SessionTime
+      , s.SessionStartTime
+      , s.SessionEndTime
+      , s.Title
+      , s.Abstract
+      , s.Category
+      , s.VolunteersRequired
+      , s.ActualSessionStartTime
+      , s.ActualSessionEndTime
+      , s.Attendees10
+      , s.Attendees50
+      , s.Notes
+	  , s.SessionType_Id
+	FROM dbo.Sessions s
+	WHERE Id = @SessionId
+";
+
+        const string SessionGetAllForUserSql = @"
+SET NOCOUNT ON;
+	SELECT
+		s.Id
+      , s.FeedSessionId
+      , s.SessionTime
+      , s.SessionStartTime
+      , s.SessionEndTime
+      , s.Title
+      , s.Abstract
+      , s.Category
+      , s.VolunteersRequired
+      , s.ActualSessionStartTime
+      , s.ActualSessionEndTime
+      , s.Attendees10
+      , s.Attendees50
+      , s.Notes
+	  , s.SessionType_Id
+	FROM dbo.Sessions s
+		INNER JOIN dbo.UserSessions us
+		ON us.Session_Id = s.Id
+	WHERE us.User_Id = @UserId
+";
+
+        const string SessionGetAllInfoSql = @"	SET NOCOUNT ON;
+
+                                        SELECT * FROM dbo.SessionTypes st
+
+	                                    SELECT r.*, sr.Session_Id FROM dbo.Rooms r
+	                                    INNER JOIN dbo.SessionRooms sr
+		                                    ON sr.Room_Id = r.Id
 	
-	                                        DECLARE @SessionId INT = NULL
-	                                        DECLARE @SessionTypeId INT
 
-	                                        SELECT @SessionTypeId = Id FROM dbo.SessionTypes st WHERE st.Name = @SessionType
-	                                        SELECT @SessionId = Id FROM dbo.Sessions s WHERE s.FeedSessionId = @Id
+	                                    SELECT s.*, ss.Session_Id FROM dbo.Speakers s
+		                                    INNER JOIN dbo.SpeakerSessions ss
+			                                    ON ss.Speaker_Id = s.Id
+	
 
-	                                        --Add session type if it does not exist
-	                                        IF @SessionTypeId IS NULL
-	                                        BEGIN
-		                                        INSERT INTO dbo.SessionTypes (Name)
-		                                        VALUES (@SessionType)
-		                                        SET @SessionTypeId = @@identity
-	                                        END 
+	                                    SELECT t.*, ts.Session_Id FROM dbo.Tags t
+		                                    INNER JOIN dbo.TagSessions ts
+			                                    ON ts.Tag_Id = t.Id
+	
 
-	                                        IF @SessionId IS NOT NULL
-	                                        BEGIN
-		                                        --UPDATE
-		                                        UPDATE [dbo].[Sessions]
-		                                           SET Abstract = @Abstract
-			                                          ,Category = @Category
-			                                          ,SessionEndTime = @SessionEndTime
-			                                          ,SessionStartTime = @SessionStartTime
-			                                          ,SessionTime = @SessionTime
-			                                          ,SessionType_Id = @SessionTypeId
-			                                          ,Title = @Title			  
-		                                         WHERE FeedSessionId = @Id
-	                                        END
-	                                        ELSE
-	                                        BEGIN
-		                                        --INSERT
-		                                        INSERT INTO dbo.Sessions
-		                                        (
-		                                            FeedSessionId
-		                                          , SessionTime
-		                                          , SessionStartTime
-		                                          , SessionEndTime
-		                                          , Title
-		                                          , Abstract
-		                                          , Category
-		                                          , VolunteersRequired
-		                                          , SessionType_Id
-		                                        )
-		                                        VALUES
-		                                        (
-		                                            @Id         
-		                                          , @SessionTime
-		                                          , @SessionStartTime
-		                                          , @SessionEndTime
-		                                          , @Title
-		                                          , @Abstract
-		                                          , @Category
-		                                          , 1
-		                                          , @SessionTypeId
-		                                        )
-		                                        SET @SessionId = @@identity
-	                                        END
+	                                    SELECT * FROM dbo.UserCheckIns uci
+	
 
-	                                        --INSERT ROOMS
-	                                        INSERT INTO dbo.SessionRooms
-	                                        ( Session_Id, Room_Id)
-	                                        SELECT @SessionId, r.Id FROM dbo.CSVtoTable(@Rooms,',') cvt
-			                                        INNER JOIN dbo.Rooms r ON r.Name = cvt.RESULT
-		                                        WHERE r.Id NOT IN (SELECT sr.Room_Id FROM dbo.SessionRooms sr WHERE sr.Session_Id = @SessionId)
+	                                    SELECT anu.*, us.Session_Id FROM dbo.AspNetUsers anu
+		                                    INNER JOIN dbo.UserSessions us
+			                                    ON us.User_Id = anu.Id";
 
-	                                        --DELETE ROOMS
-	                                        DELETE dbo.SessionRooms WHERE Session_Id = @SessionId AND Room_Id IN (
-	                                        SELECT sr.Room_Id FROM dbo.SessionRooms sr WHERE sr.Session_Id = @SessionId
-		                                        AND sr.Room_Id NOT IN (SELECT r.Id FROM dbo.CSVtoTable(@Rooms,',') cvt INNER JOIN dbo.Rooms r ON r.Name = cvt.RESULT))
+        const string SessionAssignUserSql = @"SET NOCOUNT ON;
+	                                    INSERT INTO dbo.UserSessions
+	                                    (User_Id, Session_Id)
+                                        VALUES
+	                                    (@UserId,@SessionId)";
+
+        const string SessionUnassignUserSql = @"SET NOCOUNT ON;
+	                                    DELETE dbo.UserSessions WHERE Session_Id = @SessionId AND User_Id = @UserId";
+
+        const string SessionUpsertSql = @"
+	SET NOCOUNT ON;
+	
+	DECLARE @SessionId INT = NULL
+	DECLARE @SessionTypeId INT
+
+	SELECT @SessionTypeId = Id FROM dbo.SessionTypes st WHERE st.Name = @SessionType
+
+	IF @FeedSessionId <> 0 AND @FeedSessionId IS NOT NULL
+	BEGIN
+		SELECT @SessionId = Id FROM dbo.Sessions s WHERE s.FeedSessionId = @FeedSessionId		
+	END
+	ELSE
+	BEGIN
+		IF(@Id = 0 OR @Id = NULL)
+		BEGIN
+			SELECT @SessionId = NULL
+		END
+		ELSE
+		BEGIN
+			SELECT @SessionId = @Id
+		END
+	END 
+
+	--Add session type if it does not exist
+	IF @SessionTypeId IS NULL
+	BEGIN
+		INSERT INTO dbo.SessionTypes (Name)
+		VALUES (@SessionType)
+		SET @SessionTypeId = @@identity
+	END 
+
+	IF @SessionId IS NOT NULL
+	BEGIN
+		--UPDATE
+		UPDATE [dbo].[Sessions]
+		   SET Abstract = @Abstract
+			  ,Category = @Category
+			  ,SessionEndTime = @SessionEndTime
+			  ,SessionStartTime = @SessionStartTime
+			  ,SessionTime = @SessionTime
+			  ,SessionType_Id = @SessionTypeId
+			  ,Title = @Title			  
+		 WHERE Id = @Id
+	END
+	ELSE
+	BEGIN
+		--INSERT
+		INSERT INTO dbo.Sessions
+		(
+		    FeedSessionId
+		  , SessionTime
+		  , SessionStartTime
+		  , SessionEndTime
+		  , Title
+		  , Abstract
+		  , Category
+		  , VolunteersRequired
+		  , SessionType_Id
+		  , Attendees10
+		  , Attendees50		  
+		)
+		VALUES
+		(
+		    @Id         
+		  , @SessionTime
+		  , @SessionStartTime
+		  , @SessionEndTime
+		  , @Title
+		  , @Abstract
+		  , @Category
+		  , 1
+		  , @SessionTypeId
+		  , 0
+		  , 0
+		)
+		SET @SessionId = @@identity
+	END
+
+	--Add room if it doesn't exist
+	INSERT INTO dbo.Rooms (Name)
+	SELECT r.RESULT FROM dbo.CSVtoTable(@Rooms,',') r
+	WHERE r.RESULT NOT IN (SELECT Name FROM dbo.Rooms)
+
+	--INSERT ROOMS
+	INSERT INTO dbo.SessionRooms
+	( Session_Id, Room_Id)
+	SELECT @SessionId, r.Id FROM dbo.CSVtoTable(@Rooms,',') cvt
+			INNER JOIN dbo.Rooms r ON r.Name = cvt.RESULT
+		WHERE r.Id NOT IN (SELECT sr.Room_Id FROM dbo.SessionRooms sr WHERE sr.Session_Id = @SessionId)
+
+	--DELETE ROOMS
+	DELETE dbo.SessionRooms WHERE Session_Id = @SessionId AND Room_Id IN (
+	SELECT sr.Room_Id FROM dbo.SessionRooms sr WHERE sr.Session_Id = @SessionId
+		AND sr.Room_Id NOT IN (SELECT r.Id FROM dbo.CSVtoTable(@Rooms,',') cvt INNER JOIN dbo.Rooms r ON r.Name = cvt.RESULT))
 
 
-	                                        --INSERT Tags
-	                                        INSERT INTO dbo.TagSessions
-	                                        ( Session_Id, Tag_Id)
-	                                        SELECT @SessionId, r.Id FROM dbo.CSVtoTable(@Tags,',') cvt
-			                                        INNER JOIN dbo.Tags r ON r.Name = cvt.RESULT
-		                                        WHERE r.Id NOT IN (SELECT sr.Tag_Id FROM dbo.TagSessions sr WHERE sr.Session_Id = @SessionId)
+	--Add tags if it doesn't exist
+	INSERT INTO dbo.Tags (Name)
+	SELECT t.RESULT FROM dbo.CSVtoTable(@Tags,',') t
+	WHERE t.RESULT NOT IN (SELECT Name FROM dbo.Tags)
 
-	                                        --DELETE Tags
-	                                        DELETE dbo.TagSessions WHERE Session_Id = @SessionId AND Tag_Id IN (
-	                                        SELECT sr.Tag_Id FROM dbo.TagSessions sr WHERE sr.Session_Id = @SessionId
-		                                        AND sr.Tag_Id NOT IN (SELECT r.Id FROM dbo.CSVtoTable(@Tags,',') cvt INNER JOIN dbo.Tags r ON r.Name = cvt.RESULT))
+	--INSERT Tags
+	INSERT INTO dbo.TagSessions
+	( Session_Id, Tag_Id)
+	SELECT @SessionId, r.Id FROM dbo.CSVtoTable(@Tags,',') cvt
+			INNER JOIN dbo.Tags r ON r.Name = cvt.RESULT
+		WHERE r.Id NOT IN (SELECT sr.Tag_Id FROM dbo.TagSessions sr WHERE sr.Session_Id = @SessionId)
 
-	                                        --INSERT Speakers
-	                                        INSERT INTO dbo.SpeakerSessions	
-	                                        ( Session_Id, Speaker_Id)
-	                                        SELECT @SessionId, r.Id FROM dbo.CSVtoTable(@Speakers,',') cvt
-			                                        INNER JOIN dbo.Speakers r ON r.Id = cvt.RESULT
-		                                        WHERE r.Id NOT IN (SELECT sr.Speaker_Id FROM dbo.SpeakerSessions sr WHERE sr.Session_Id = @SessionId)
+	--DELETE Tags
+	DELETE dbo.TagSessions WHERE Session_Id = @SessionId AND Tag_Id IN (
+	SELECT sr.Tag_Id FROM dbo.TagSessions sr WHERE sr.Session_Id = @SessionId
+		AND sr.Tag_Id NOT IN (SELECT r.Id FROM dbo.CSVtoTable(@Tags,',') cvt INNER JOIN dbo.Tags r ON r.Name = cvt.RESULT))
 
-	                                        --DELETE Speakers
-	                                        DELETE dbo.SpeakerSessions WHERE Session_Id = @SessionId AND Speaker_Id IN (
-	                                        SELECT sr.Speaker_Id FROM dbo.SpeakerSessions sr WHERE sr.Session_Id = @SessionId
-		                                        AND sr.Speaker_Id NOT IN (SELECT r.Id FROM dbo.CSVtoTable(@Speakers,',') cvt INNER JOIN dbo.Speakers r ON r.Id = cvt.RESULT))";
+	--INSERT Speakers
+	INSERT INTO dbo.SpeakerSessions	
+	( Session_Id, Speaker_Id)
+	SELECT @SessionId, r.Id FROM dbo.CSVtoTable(@Speakers,',') cvt
+			INNER JOIN dbo.Speakers r ON r.Id = cvt.RESULT
+		WHERE r.Id NOT IN (SELECT sr.Speaker_Id FROM dbo.SpeakerSessions sr WHERE sr.Session_Id = @SessionId)
+
+	--DELETE Speakers
+	DELETE dbo.SpeakerSessions WHERE Session_Id = @SessionId AND Speaker_Id IN (
+	SELECT sr.Speaker_Id FROM dbo.SpeakerSessions sr WHERE sr.Session_Id = @SessionId
+		AND sr.Speaker_Id NOT IN (SELECT r.Id FROM dbo.CSVtoTable(@Speakers,',') cvt INNER JOIN dbo.Speakers r ON r.Id = cvt.RESULT))
+
+	RETURN @SessionId
+";
+
+        #endregion
+
+        #region SessionType
+        const string SessionTypeGetBySessionIdSql = @"
+	                            SET NOCOUNT ON;
+	                            SELECT * FROM dbo.SessionTypes st
+	                            WHERE st.Id = @SessionTypeId";
+        #endregion
+
+        #region Tag
+        const string TagGetBySessionIdSql = @"	SET NOCOUNT ON;
+	                            SELECT * FROM dbo.Rooms r
+		                            INNER JOIN dbo.SessionRooms sr
+			                            ON sr.Room_Id = r.Id
+	                            WHERE sr.Session_Id = @SessionId";
+        #endregion
+
+        #region UserCheckIn
+        const string UserCheckInGetBySessionIdSql = @"	SET NOCOUNT ON;
+	                            SELECT * FROM dbo.UserCheckIns uci
+	                            WHERE uci.SessionId = @SessionId";
 
         #endregion
 
