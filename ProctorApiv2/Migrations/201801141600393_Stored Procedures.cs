@@ -59,7 +59,13 @@ namespace ProctorApiv2.Migrations
                                                                     Title = c.String(defaultValue: "null"),
                                                                     Rooms = c.String(defaultValue: "null"),
                                                                     Tags = c.String(defaultValue: "null"),
-                                                                    Speakers = c.String(defaultValue: "null")
+                                                                    Speakers = c.String(defaultValue: "null"),
+                                                                    ActualSessionStartTime = c.DateTime(defaultValue: null),
+                                                                    ActualSessionEndTime = c.DateTime(defaultValue: null),
+                                                                    Attendees10 = c.Int(defaultValue: 0),
+                                                                    Attendees50 = c.Int(defaultValue: 0),
+                                                                    Notes = c.String(defaultValue: "null"),
+                                                                    VolunteersRequired = c.Int(defaultValue: null)
             }, SessionUpsertSql);
             CreateStoredProcedure("dbo.SessionGetAll", c => new { }, SessionGetAllSql);
             CreateStoredProcedure("dbo.SessionGetAllForUser", c => new { UserId = c.String() }, SessionGetAllForUserSql);
@@ -76,6 +82,7 @@ namespace ProctorApiv2.Migrations
 
             //UserCheckIn
             CreateStoredProcedure("dbo.UserCheckInGetBySessionId", c => new { SessionId = c.Int() }, UserCheckInGetBySessionIdSql);
+            CreateStoredProcedure("dbo.UserCheckInUpsert", c => new { SessionId = c.Int(), UserId = c.String(), CheckInTime = c.DateTime(defaultValue: null) }, UserCheckInUpsertSql);
 
             //Helper
             CreateStoredProcedure("dbo.AutoAssignUsersToSessions", c => new { }, AutoAssignUsersToSessionsSql);
@@ -125,6 +132,7 @@ namespace ProctorApiv2.Migrations
 
             //UserCheckIn
             DropStoredProcedure("dbo.UserCheckInGetBySessionId");
+            DropStoredProcedure("dbo.UserCheckInUpsert");
 
             //Helper
             DropStoredProcedure("dbo.AutoAssignUsersToSessions");
@@ -365,7 +373,7 @@ SET NOCOUNT ON;
 	                                    DELETE dbo.UserSessions WHERE Session_Id = @SessionId AND User_Id = @UserId";
 
         const string SessionUpsertSql = @"
-	SET NOCOUNT ON;
+    SET NOCOUNT ON;
 	
 	DECLARE @SessionId INT = NULL
 	DECLARE @SessionTypeId INT
@@ -406,7 +414,13 @@ SET NOCOUNT ON;
 			  ,SessionStartTime = @SessionStartTime
 			  ,SessionTime = @SessionTime
 			  ,SessionType_Id = @SessionTypeId
-			  ,Title = @Title			  
+			  ,Title = @Title			
+			  ,ActualSessionStartTime = @ActualSessionStartTime
+			  ,ActualSessionEndTime = @ActualSessionEndTime
+			  ,Attendees10 = @Attendees10
+			  ,Attendees50 = @Attendees50  
+			  ,Notes =@Notes
+			  ,VolunteersRequired = @VolunteersRequired
 		 WHERE Id = @Id
 	END
 	ELSE
@@ -435,7 +449,7 @@ SET NOCOUNT ON;
 		  , @Title
 		  , @Abstract
 		  , @Category
-		  , 1
+		  , @VolunteersRequired
 		  , @SessionTypeId
 		  , 0
 		  , 0
@@ -490,7 +504,7 @@ SET NOCOUNT ON;
 	SELECT sr.Speaker_Id FROM dbo.SpeakerSessions sr WHERE sr.Session_Id = @SessionId
 		AND sr.Speaker_Id NOT IN (SELECT r.Id FROM dbo.CSVtoTable(@Speakers,',') cvt INNER JOIN dbo.Speakers r ON r.Id = cvt.RESULT))
 
-	RETURN @SessionId
+	RETURN @SessionId	
 ";
 
         #endregion
@@ -515,78 +529,106 @@ SET NOCOUNT ON;
 	                            SELECT * FROM dbo.UserCheckIns uci
 	                            WHERE uci.SessionId = @SessionId";
 
+        const string UserCheckInUpsertSql = @"
+    SET NOCOUNT ON
+	IF (SELECT count(*) FROM dbo.UserCheckIns uci WHERE uci.UserId = @UserId AND uci.SessionId = @SessionId) > 0
+	BEGIN
+		--UPDATE
+		UPDATE dbo.UserCheckIns
+			SET CheckInTime = @CheckInTime
+			WHERE UserId = @UserId AND SessionId = @SessionId
+	END
+	ELSE
+	BEGIN
+		--INSERT
+		INSERT dbo.UserCheckIns
+		(
+			SessionId
+		  , UserId
+		  , CheckInTime
+		)
+		VALUES
+		(
+			@SessionId         -- SessionId - int
+		  , @UserId       -- UserId - nvarchar(128)
+		  , @CheckInTime -- CheckInTime - datetime
+		)
+
+	END
+";
         #endregion
 
         #region Helpers
         const string AutoAssignUsersToSessionsSql = @"
-                                        SET NOCOUNT ON;
-
-                                        DECLARE @SessionId INT
-	                                    DECLARE @UserId VARCHAR(128)
-	                                    DECLARE @Msg VARCHAR(1000)
-	                                    DECLARE @UnableToAssign TABLE(SessionId INT)
- 
-	                                    SELECT @SessionId = s.Id FROM dbo.Sessions s
-	                                    WHERE s.SessionType IN ('General Session', 'Static Session', 'Pre-Compiler', 'Sponsor Session')  
-	                                    AND isnull(s.VolunteersRequired,1) > (SELECT count(*) FROM dbo.SessionUsers su WHERE su.Session_Id = s.Id)
-	                                    AND s.Id NOT IN (SELECT uta.SessionId FROM @UnableToAssign uta)
-	                                    ORDER BY s.SessionStartTime DESC
-
-	                                    WHILE @SessionId IS NOT NULL
-	                                    BEGIN
-	                                        SET @UserId = NULL 
-	                                        SELECT TOP 1 @UserId = anu.Id
-		                                    FROM dbo.AspNetUsers anu
-		                                    INNER JOIN dbo.AspNetUserRoles anur
-			                                    ON anur.UserId = anu.Id
-		                                    INNER JOIN dbo.AspNetRoles anr
-			                                    ON anr.Id = anur.RoleId
-		                                    LEFT JOIN dbo.SessionUsers su
-			                                    ON su.User_Id = anu.Id
-		                                    LEFT JOIN dbo.Sessions s
-			                                    ON s.Id = su.Session_Id
-		                                    WHERE anr.Name = 'Volunteers'
-		                                    AND dbo.HasCollision(@SessionId, anu.Id) = 0
-                                            AND dbo.HasException(@SessionId, anu.Id) = 0
-		                                    GROUP BY anu.Id
-		                                    ORDER BY sum(isnull(datediff(SECOND, s.SessionStartTime, s.SessionEndTime),0))
-
-	
-		                                    IF @UserId IS NOT NULL
-		                                    BEGIN
-			                                    INSERT INTO dbo.SessionUsers
-			                                    (
-				                                    Session_Id
-			                                        , User_Id
-			                                    )
-			                                    VALUES
-			                                    (
-				                                    @SessionId   -- Session_Id - int
-			                                        , @UserId -- User_Id - nvarchar(128)
-			                                    )	
-			                                    SET @Msg = 'Assigned session ' + CAST(@SessionId AS VARCHAR(20)) + ' to user ' + @UserId
-			                                    RAISERROR (@Msg, 0, 0)
-		                                    END
-		                                    ELSE
-		                                    BEGIN
-			                                    INSERT INTO  @UnableToAssign
-			                                    (
-				                                    SessionId
-			                                    )
-			                                    VALUES
-			                                    (
-				                                    @SessionId -- SessionId - int
-			                                    )
-			                                    SET @Msg = 'Could not assign session ' + CAST(@SessionId AS VARCHAR(20)) + ' to any user.'
-			                                    RAISERROR (@Msg, 0, 0)
-		                                    END
-		                                    SET @SessionId = NULL 
-		                                    SELECT @SessionId = s.Id FROM dbo.Sessions s
-			                                    WHERE s.SessionType IN ('General Session', 'Static Session', 'Pre-Compiler', 'Sponsor Session')  
-			                                    AND isnull(s.VolunteersRequired,1) > (SELECT count(*) FROM dbo.SessionUsers su WHERE su.Session_Id = s.Id)
-			                                    AND s.Id NOT IN (SELECT uta.SessionId FROM @UnableToAssign uta)
-			                                    ORDER BY s.SessionStartTime DESC
-	                                    END";
+    SET NOCOUNT ON;
+    
+    DECLARE @SessionId INT
+    DECLARE @UserId VARCHAR(128)
+    DECLARE @Msg VARCHAR(1000)
+    DECLARE @UnableToAssign TABLE(SessionId INT)
+    
+    SELECT @SessionId = s.Id FROM dbo.Sessions s
+    WHERE s.SessionType_Id IN (SELECT Id FROM dbo.SessionTypes st WHERE Name IN ('General Session', 'Static Session', 'Pre-Compiler', 'Sponsor Session'))  
+    AND isnull(s.VolunteersRequired,1) > (SELECT count(*) FROM dbo.UserSessions su WHERE su.Session_Id = s.Id)
+    AND s.Id NOT IN (SELECT uta.SessionId FROM @UnableToAssign uta)
+    ORDER BY s.SessionStartTime DESC
+    
+    WHILE @SessionId IS NOT NULL
+    BEGIN
+    	SET @UserId = NULL 
+    	SELECT TOP 1 @UserId = anu.Id
+    	FROM dbo.AspNetUsers anu
+    	INNER JOIN dbo.AspNetUserRoles anur
+    		ON anur.UserId = anu.Id
+    	INNER JOIN dbo.AspNetRoles anr
+    		ON anr.Id = anur.RoleId
+    	LEFT JOIN dbo.UserSessions su
+    		ON su.User_Id = anu.Id
+    	LEFT JOIN dbo.Sessions s
+    		ON s.Id = su.Session_Id
+    	WHERE anr.Name = 'Volunteers'
+    	AND dbo.HasCollision(@SessionId, anu.Id) = 0
+		AND dbo.HasException(@SessionId, anu.Id) = 0
+    	GROUP BY anu.Id
+    	ORDER BY sum(isnull(datediff(SECOND, s.SessionStartTime, s.SessionEndTime),0))
+    
+    	
+    	IF @UserId IS NOT NULL
+    	BEGIN
+    		INSERT INTO dbo.UserSessions
+    		(
+    			Session_Id
+    			, User_Id
+    		)
+    		VALUES
+    		(
+    			@SessionId   -- Session_Id - int
+    			, @UserId -- User_Id - nvarchar(128)
+    		)	
+    		SET @Msg = 'Assigned session ' + CAST(@SessionId AS VARCHAR(20)) + ' to user ' + @UserId
+    		RAISERROR (@Msg, 0, 0)
+    	END
+    	ELSE
+    	BEGIN
+    		INSERT INTO  @UnableToAssign
+    		(
+    			SessionId
+    		)
+    		VALUES
+    		(
+    			@SessionId -- SessionId - int
+    		)
+    		SET @Msg = 'Could not assign session ' + CAST(@SessionId AS VARCHAR(20)) + ' to any user.'
+    		RAISERROR (@Msg, 0, 0)
+    	END
+    	SET @SessionId = NULL 
+    	SELECT @SessionId = s.Id FROM dbo.Sessions s
+    		WHERE s.SessionType_Id IN (SELECT Id FROM dbo.SessionTypes st WHERE Name IN ('General Session', 'Static Session', 'Pre-Compiler', 'Sponsor Session'))   
+    		AND isnull(s.VolunteersRequired,1) > (SELECT count(*) FROM dbo.UserSessions su WHERE su.Session_Id = s.Id)
+    		AND s.Id NOT IN (SELECT uta.SessionId FROM @UnableToAssign uta)
+    		ORDER BY s.SessionStartTime DESC
+    END
+";
         #endregion
     }
 }

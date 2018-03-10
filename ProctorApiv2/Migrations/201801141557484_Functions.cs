@@ -40,7 +40,7 @@ namespace ProctorApiv2.Migrations
 	                    DECLARE @CollisionCount INT = 0
 
 	                    SELECT @CollisionCount = count(*) FROM
-	                    (SELECT s.Id , s.SessionStartTime, s.SessionEndTime FROM dbo.SessionUsers su 
+	                    (SELECT s.Id , s.SessionStartTime, s.SessionEndTime FROM dbo.UserSessions su 
 		                    INNER JOIN dbo.Sessions s 
 			                    ON s.Id = su.Session_Id
 		                    WHERE su.User_Id = @UserId) a,
@@ -78,7 +78,7 @@ namespace ProctorApiv2.Migrations
 
 	                    SELECT @ExceptionCount = count(*) FROM
 	                    (SELECT se.Id , se.StartTime, se.EndTime FROM dbo.ScheduleExceptions se		                    
-		                    WHERE se.UserId = @UserId) a,
+		                    WHERE se.User_Id = @UserId) a,
 	
 	                    (SELECT * FROM dbo.Sessions s 
 		                    WHERE s.Id = @SessionId) b

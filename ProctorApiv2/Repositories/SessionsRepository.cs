@@ -227,7 +227,26 @@ namespace ProctorApiv2.Repositories
                 cmd.Parameters.AddWithValue("@Rooms", roomsStr.Substring(1));
                 cmd.Parameters.AddWithValue("@Tags", tagsStr.Substring(1));
                 cmd.Parameters.AddWithValue("@Speakers", speakersStr.Substring(1));
+                cmd.Parameters.AddWithValue("@VolunteersRequired", session.VolunteersRequired);
+                cmd.Parameters.AddWithValue("@Attendees10", session.Attendees10);
+                cmd.Parameters.AddWithValue("@Attendees50", session.Attendees50);
+                cmd.Parameters.AddWithValue("@Notes", session.Notes);
+                if (session.ActualSessionStartTime != null)
+                    cmd.Parameters.AddWithValue("@ActualSessionStartTime", session.ActualSessionStartTime);
+
+                if (session.ActualSessionEndTime != null)
+                    cmd.Parameters.AddWithValue("@ActualSessionEndTime", session.ActualSessionEndTime);
+
+
             });
+
+            if(session.ProctorCheckIns != null && session.ProctorCheckIns.Count > 0)
+            {
+                foreach(var proctorCheckIn in session.ProctorCheckIns)
+                {
+                    _proctorCheckInsRepository.UpsertProctorCheckIn(proctorCheckIn);
+                }
+            }
 
             
             
@@ -336,12 +355,21 @@ namespace ProctorApiv2.Repositories
 
         public void AutoAssign()
         {
-            throw new NotImplementedException();
+            var spName = "AutoAssignUsersToSessions";
+
+            ExecuteStatement(_connStr, (conn, cmd) =>
+            {
+                cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                cmd.CommandText = spName;
+            });
         }
 
         public List<User> GetSessionsPerUser()
         {
-            throw new NotImplementedException();
+            var allUsers = _userRepository.GetUsers();
+            List<User> users = new List<User>();
+            allUsers.ForEach(user => users.Add(GetSessionsForUser(user.Id)));
+            return users;            
         }
 
         public User GetSessionsForUser(string userId)

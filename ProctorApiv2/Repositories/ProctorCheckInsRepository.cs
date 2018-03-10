@@ -17,5 +17,21 @@ namespace ProctorApiv2.Repositories
             List<UserCheckIn> userCheckIns = GetFromSQL<UserCheckIn>(_connStr, spName, AutoConvert<UserCheckIn>, parms);
             return userCheckIns;
         }
+
+        public void UpsertProctorCheckIn(UserCheckIn userCheckIn)
+        {
+            var spName = "UserCheckInUpsert";
+            ExecuteStatement(_connStr, (conn, cmd) =>
+            {
+                cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                cmd.CommandText = spName;
+
+                cmd.Parameters.AddWithValue("@SessionId", userCheckIn.SessionId);
+                cmd.Parameters.AddWithValue("@UserId", userCheckIn.UserId);
+                if(userCheckIn.CheckInTime != null)
+                    cmd.Parameters.AddWithValue("@CheckInTime", userCheckIn.CheckInTime);
+
+            });
+        }
     }
 }

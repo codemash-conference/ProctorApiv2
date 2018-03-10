@@ -108,7 +108,7 @@ namespace ProctorApiv2.Controllers
             return Ok();
         }
 
-        // GET api/<controller>/GetUsersForRole/5
+        // GET api/<controller>/GetSessionsPerUser
         [Route("api/Sessions/GetSessionsPerUser")]
         [HttpGet]
         public List<User> GetSessionsPerUser()
