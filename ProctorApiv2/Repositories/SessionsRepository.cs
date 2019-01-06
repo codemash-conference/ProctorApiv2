@@ -49,13 +49,33 @@ namespace ProctorApiv2.Repositories
             {
                 var json = webClient.DownloadString(_speakerFeed);
                 
-                List<SpeakerImport> speakerImport = JsonConvert.DeserializeObject<List<SpeakerImport>>(json);
+                List<ViewModels.SessionizeSpeaker.Speaker> speakerImport = JsonConvert.DeserializeObject<List<ViewModels.SessionizeSpeaker.Speaker>>(json);
 
-                foreach (SpeakerImport speaker in speakerImport)
+                foreach (ViewModels.SessionizeSpeaker.Speaker speaker in speakerImport)
                 {
-                    UpsertSpeaker(speaker);
+                    var mappedSpeaker = MapSpeaker(speaker);
+                    UpsertSpeaker(mappedSpeaker);
                 }
             }
+        }
+
+        private SpeakerImport MapSpeaker(ViewModels.SessionizeSpeaker.Speaker speaker)
+        {
+            var mappedSpeaker = new SpeakerImport();
+            var blog = speaker.links.FirstOrDefault(x => x.LinkType == "Blog");
+            var linkedIn = speaker.links.FirstOrDefault(x => x.LinkType == "LinkedIn");
+            var twitter = speaker.links.FirstOrDefault(x => x.LinkType == "Twitter");
+
+            mappedSpeaker.Biography = speaker.bio;
+            mappedSpeaker.BlogUrl = blog == null ? "" : blog.Url;
+            mappedSpeaker.FirstName = speaker.firstName;
+            mappedSpeaker.GravatarUrl = speaker.profilePicture;
+            mappedSpeaker.Id = speaker.id;
+            mappedSpeaker.LastName = speaker.lastName;
+            mappedSpeaker.LinkedInProfile = linkedIn == null ? "" : linkedIn.Url;
+            mappedSpeaker.TwitterLink = twitter == null ? "" : twitter.Url;            
+
+            return mappedSpeaker;            
         }
 
         public Session getSessionById(int sessionId)
@@ -257,19 +277,55 @@ namespace ProctorApiv2.Repositories
             using (var webClient = new System.Net.WebClient())
             {
                 var json = webClient.DownloadString(_sessionFeed);
-                
-                List<SessionImport> sessionImport = JsonConvert.DeserializeObject<List<SessionImport>>(json);
 
-                foreach (SessionImport session in sessionImport)
+                List<ViewModels.SessionizeSession.RootObject> sessionImport = JsonConvert.DeserializeObject<List<ViewModels.SessionizeSession.RootObject>>(json);
+                
+                foreach (ViewModels.SessionizeSession.Session session in sessionImport.FirstOrDefault().sessions)
                 {
-                    session.FeedSessionId = session.Id;
-                    session.Id = 0;
-                    UpsertSession(session);
+                    //session.FeedSessionId = session.Id;
+                    //session.Id = 0;
+                    var mappedSession = MapSession(session);
+                    UpsertSession(mappedSession);
                 }
-
-                
-
             }
+        }
+
+        private SessionImport MapSession(ViewModels.SessionizeSession.Session session)
+        {
+            var mappedSession = new SessionImport();
+            mappedSession.Speakers = new List<ViewModels.Speaker>();
+            mappedSession.Tags = new List<string>();
+
+            var sessionFormat = session.categories.FirstOrDefault(x => x.name == "Session format");
+            var sessionTrack = session.categories.FirstOrDefault(x => x.name == "Track");
+            var sessionTags = session.categories.FirstOrDefault(x => x.name == "Tags");
+
+            mappedSession.Abstract = session.description;
+            mappedSession.Category = sessionTrack == null ? "" : sessionTrack.categoryItems[0].Name;
+            mappedSession.FeedSessionId = session.id;
+            mappedSession.Room = session.room;
+            mappedSession.SessionEndTime = session.endsAt;
+            mappedSession.SessionStartTime = session.startsAt;
+            mappedSession.SessionTime = session.startsAt;
+            mappedSession.SessionType = sessionFormat == null ? "" : sessionFormat.categoryItems[0].Name;            
+            foreach (var speaker in session.speakers)
+            {
+                mappedSession.Speakers.Add(new ViewModels.Speaker() {
+                    Id = speaker.id
+                });
+            }
+
+            if(sessionTags != null && sessionTags.categoryItems.Count > 0)
+            {
+                foreach(var tag in sessionTags.categoryItems)
+                {
+                    mappedSession.Tags.Add(tag.Name);
+                }
+            }
+
+            mappedSession.Title = session.title;
+
+            return mappedSession;
         }
 
         public void UpsertSession(SessionImport session)
@@ -277,15 +333,15 @@ namespace ProctorApiv2.Repositories
             var spName = "SessionUpsert";
 
             string speakersStr = "";
-            string roomsStr = "";
+            
             string tagsStr = "";
             session.Speakers.ForEach(s => speakersStr += ',' + s.Id);
             session.Tags.ForEach(t => tagsStr += ',' + t);
-            session.Rooms.ForEach(r => roomsStr += ',' + r);
+            
 
             if (string.IsNullOrEmpty(speakersStr)) { speakersStr = ","; }
             if (string.IsNullOrEmpty(tagsStr)) { tagsStr = ","; }
-            if (string.IsNullOrEmpty(roomsStr)) { roomsStr = ","; }
+            
 
             ExecuteStatement(_connStr, (conn, cmd) =>
             {
@@ -298,10 +354,10 @@ namespace ProctorApiv2.Repositories
                 cmd.Parameters.AddWithValue("@FeedSessionId", session.FeedSessionId);
                 cmd.Parameters.AddWithValue("@SessionEndTime", session.SessionEndTime);
                 cmd.Parameters.AddWithValue("@SessionStartTime", session.SessionStartTime);
-                //cmd.Parameters.AddWithValue("@SessionTime", session.SessionTime);
+                cmd.Parameters.AddWithValue("@SessionTime", session.SessionTime);
                 cmd.Parameters.AddWithValue("@SessionType", session.SessionType);
                 cmd.Parameters.AddWithValue("@Title", session.Title);
-                cmd.Parameters.AddWithValue("@Rooms", roomsStr.Substring(1));
+                cmd.Parameters.AddWithValue("@Rooms", session.Room);
                 cmd.Parameters.AddWithValue("@Tags", tagsStr.Substring(1));
                 cmd.Parameters.AddWithValue("@Speakers", speakersStr.Substring(1));
             });
@@ -331,6 +387,11 @@ namespace ProctorApiv2.Repositories
             if (string.IsNullOrEmpty(tagsStr)) { tagsStr = ","; }
             if (string.IsNullOrEmpty(roomsStr)) { roomsStr = ","; }
 
+            if (session.VolunteersRequired == 0)
+            {
+                session.VolunteersRequired = 1;
+            }
+
             var id = ExecuteScalerStatement(_connStr, (conn, cmd) =>
             {
                 cmd.CommandType = System.Data.CommandType.StoredProcedure;
@@ -347,6 +408,8 @@ namespace ProctorApiv2.Repositories
                 cmd.Parameters.AddWithValue("@Rooms", roomsStr.Substring(1));
                 cmd.Parameters.AddWithValue("@Tags", tagsStr.Substring(1));
                 cmd.Parameters.AddWithValue("@Speakers", speakersStr.Substring(1));
+                cmd.Parameters.AddWithValue("@VolunteersRequired", session.VolunteersRequired);
+
             });
 
             return id;

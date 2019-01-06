@@ -229,6 +229,7 @@
     <Compile Include="Areas\HelpPage\SampleGeneration\SampleDirection.cs" />
     <Compile Include="Areas\HelpPage\SampleGeneration\TextSample.cs" />
     <Compile Include="Areas\HelpPage\XmlDocumentationProvider.cs" />
+    <Compile Include="Controllers\ApplicationController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\RolesController.cs" />
     <Compile Include="Controllers\RoomsController.cs" />
@@ -253,7 +254,24 @@
     <Compile Include="Migrations\201801160043359_Updated Table Structure.Designer.cs">
       <DependentUpon>201801160043359_Updated Table Structure.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201809091452414_Applications.cs" />
+    <Compile Include="Migrations\201809091452414_Applications.Designer.cs">
+      <DependentUpon>201809091452414_Applications.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201812091443258_New Session API changes.cs" />
+    <Compile Include="Migrations\201812091443258_New Session API changes.Designer.cs">
+      <DependentUpon>201812091443258_New Session API changes.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201812091452397_Add priority to Session Types for auto assigning.cs" />
+    <Compile Include="Migrations\201812091452397_Add priority to Session Types for auto assigning.Designer.cs">
+      <DependentUpon>201812091452397_Add priority to Session Types for auto assigning.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201812091518542_Allow feed session id to be null.cs" />
+    <Compile Include="Migrations\201812091518542_Allow feed session id to be null.Designer.cs">
+      <DependentUpon>201812091518542_Allow feed session id to be null.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
+    <Compile Include="Models\Application.cs" />
     <Compile Include="Models\ProctorV2Context.cs" />
     <Compile Include="Models\Role.cs" />
     <Compile Include="Models\Room.cs" />
@@ -266,6 +284,7 @@
     <Compile Include="Models\UserCheckIn.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Providers\ApplicationOAuthProvider.cs" />
+    <Compile Include="Repositories\ApplicationRepository.cs" />
     <Compile Include="Repositories\ProctorCheckInsRepository.cs" />
     <Compile Include="Repositories\RolesRepository.cs" />
     <Compile Include="Repositories\RoomsRepository.cs" />
@@ -282,6 +301,8 @@
     <Compile Include="Utils\Mappings.cs" />
     <Compile Include="ViewModels\PasswordReset.cs" />
     <Compile Include="ViewModels\SessionImport.cs" />
+    <Compile Include="ViewModels\SessionizeSession\SessionizeSessions.cs" />
+    <Compile Include="ViewModels\SessionizeSpeaker\SessionizeSpeaker.cs" />
     <Compile Include="ViewModels\SessionResult.cs" />
     <Compile Include="ViewModels\SpeakerImport.cs" />
   </ItemGroup>
@@ -316,6 +337,10 @@
     <Content Include="ApplicationInsights.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Properties\PublishProfiles\cmprod-volunteers-api - FTP.pubxml" />
+    <None Include="Properties\PublishProfiles\cmprod-volunteers-api - Web Deploy.pubxml" />
+    <None Include="Properties\PublishProfiles\cmprod-volunteers-api-dev - FTP.pubxml" />
+    <None Include="Properties\PublishProfiles\cmprod-volunteers-api-dev - Web Deploy.pubxml" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />
     <Content Include="Scripts\jquery-1.10.2.min.js" />
@@ -365,6 +390,18 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201801160043359_Updated Table Structure.resx">
       <DependentUpon>201801160043359_Updated Table Structure.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201809091452414_Applications.resx">
+      <DependentUpon>201809091452414_Applications.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201812091443258_New Session API changes.resx">
+      <DependentUpon>201812091443258_New Session API changes.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201812091452397_Add priority to Session Types for auto assigning.resx">
+      <DependentUpon>201812091452397_Add priority to Session Types for auto assigning.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201812091518542_Allow feed session id to be null.resx">
+      <DependentUpon>201812091518542_Allow feed session id to be null.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

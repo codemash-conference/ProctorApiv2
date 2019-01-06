@@ -237,7 +237,7 @@ namespace ProctorApiv2.Repositories
                 cmd.CommandType = System.Data.CommandType.StoredProcedure;
                 conn.Open();
                 cmd.Connection = conn;
-
+                cmd.CommandTimeout = 120;
                 f(conn, cmd);
 
                 if (string.IsNullOrEmpty(cmd.CommandText))

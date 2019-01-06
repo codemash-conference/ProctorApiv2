@@ -20,7 +20,7 @@ namespace ProctorApiv2.Models
 
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        public int? FeedSessionId { get; set; }
+        public int FeedSessionId { get; set; }
         public DateTime? SessionTime { get; set; }
         public DateTime? SessionStartTime { get; set; }
         public DateTime? SessionEndTime { get; set; }

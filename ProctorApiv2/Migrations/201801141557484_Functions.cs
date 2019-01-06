@@ -41,11 +41,11 @@ namespace ProctorApiv2.Migrations
 
 	                    SELECT @CollisionCount = count(*) FROM
 	                    (SELECT s.Id , s.SessionStartTime, s.SessionEndTime FROM dbo.UserSessions su 
-		                    INNER JOIN dbo.Sessions s 
+		                    INNER JOIN (SELECT * FROM dbo.Sessions WHERE VolunteersRequired <> 99) s 
 			                    ON s.Id = su.Session_Id
 		                    WHERE su.User_Id = @UserId) a,
 	
-	                    (SELECT * FROM dbo.Sessions s 
+	                    (SELECT * FROM (SELECT * FROM dbo.Sessions WHERE VolunteersRequired <> 99) s 
 		                    WHERE s.Id = @SessionId) b
 		                    WHERE b.SessionStartTime BETWEEN a.SessionStartTime AND a.SessionEndTime
                                 OR b.SessionEndTime BETWEEN a.SessionStartTime AND a.SessionEndTime
