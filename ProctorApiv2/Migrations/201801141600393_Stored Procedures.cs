@@ -48,6 +48,7 @@ namespace ProctorApiv2.Migrations
             CreateStoredProcedure("dbo.SpeakerGetBySessionId", c => new { SessionId = c.Int() }, SpeakerGetBySessionIdSql);
 
             //Session
+            //TODO: Set ActualSessionStartTime and ActualSessionEndTime to default to NULL
             CreateStoredProcedure("dbo.SessionUpsert", c => new {   Abstract = c.String(defaultValue: null),
                                                                     Category = c.String(defaultValue: null),
                                                                     Id = c.Int(),
@@ -73,6 +74,7 @@ namespace ProctorApiv2.Migrations
             CreateStoredProcedure("dbo.SessionGetAllInfo", c => new { }, SessionGetAllInfoSql);
             CreateStoredProcedure("dbo.SessionAssignUser", c => new { UserId = c.String(), SessionId = c.Int() }, SessionAssignUserSql);
             CreateStoredProcedure("dbo.SessionUnassignUser", c => new { UserId = c.String(), SessionId = c.Int() }, SessionUnassignUserSql);
+            CreateStoredProcedure("dbo.SessionGetResults", c => new { }, SessionGetResultsSql);
 
             //Session Type
             CreateStoredProcedure("dbo.SessionTypeGetBySessionId", c => new { SessionTypeId = c.Int() }, SessionTypeGetBySessionIdSql);
@@ -86,6 +88,16 @@ namespace ProctorApiv2.Migrations
 
             //Helper
             CreateStoredProcedure("dbo.AutoAssignUsersToSessions", c => new { }, AutoAssignUsersToSessionsSql);
+
+            //ScheduleExceptions
+            CreateStoredProcedure("dbo.ScheduleExceptionGetAll", c => new { }, ScheduleExceptionGetAllSql);
+            CreateStoredProcedure("dbo.AddSessionSwitch", c => new {
+                FromUserId = c.String(),
+                ToUserId = c.String(),
+                SessionId = c.Int(),
+                ForSessionId = c.Int(),
+                Type = c.Int()
+            }, AddSessionSwitchSql);
         }
         
         public override void Down()
@@ -136,6 +148,9 @@ namespace ProctorApiv2.Migrations
 
             //Helper
             DropStoredProcedure("dbo.AutoAssignUsersToSessions");
+
+            //ScheduleExceptions
+            DropStoredProcedure("dbo.ScheduleExceptionGetAll");
         }
         
         #region User
@@ -339,7 +354,7 @@ SET NOCOUNT ON;
       , s.Notes
 	  , s.SessionType_Id
 	FROM dbo.Sessions s
-		INNER JOIN dbo.UserSessions us
+		LEFT JOIN dbo.UserSessions us
 		ON us.Session_Id = s.Id
 	WHERE us.User_Id = @UserId OR s.VolunteersRequired = 99
 ";
@@ -382,6 +397,33 @@ SET NOCOUNT ON;
 
         const string SessionUnassignUserSql = @"SET NOCOUNT ON;
 	                                    DELETE dbo.UserSessions WHERE Session_Id = @SessionId AND User_Id = @UserId";
+
+        const string SessionGetResultsSql = @"SET NOCOUNT ON;
+
+	SELECT s.[Id]
+		  ,[FeedSessionId] AS SessionAlternateId
+		  ,[SessionStartTime]
+		  ,[SessionEndTime]
+		  , r.Name AS Rooms
+		  ,[Title]
+		  , st.Name AS SessionType
+		  , uci.CheckInTime AS ProctorCheckInTime
+		  ,[ActualSessionStartTime]
+		  ,[ActualSessionEndTime]
+		  ,[Attendees10]
+		  ,[Attendees50]
+		  ,[Notes]
+	  FROM [Sessions] s
+		INNER JOIN dbo.SessionTypes st
+			ON st.Id = s.SessionType_Id
+		LEFT JOIN dbo.UserCheckIns uci
+			ON uci.SessionId = s.Id AND uci.CheckInTime IS NOT NULL
+		LEFT JOIN dbo.SessionRooms sr
+			ON sr.Session_Id = s.Id
+		LEFT JOIN dbo.Rooms r
+			ON r.Id = sr.Room_Id
+			WHERE st.Name IN ('General Session', 'Pre-Compiler', 'PreCompiler', 'Sponsor Session')
+			AND s.FeedSessionId IS NOT NULL";
 
         const string SessionUpsertSql = @"
     SET NOCOUNT ON;
@@ -652,6 +694,59 @@ SET NOCOUNT ON;
             ORDER BY st.Priority, s.SessionStartTime DESC
     END
 ";
+        #endregion
+
+        #region ScheduleExceptions
+        const string ScheduleExceptionGetAllSql = @"
+ SET NOCOUNT ON
+
+    SELECT se.Id
+         , se.StartTime
+         , se.EndTime
+         , se.User_Id
+		  FROM dbo.ScheduleExceptions se
+";
+        const string AddSessionSwitchSql = @"
+SET NOCOUNT ON
+
+	INSERT INTO dbo.SessionSwitches
+	(
+	    FromUserId
+	  , ToUserId
+	  , SessionId
+	  , CreatedTime
+	  , Status
+	)
+	VALUES
+	(
+	    @FromUserId
+	  , @ToUserId
+	  , @SessionId
+	  , getdate()
+	  , N'Pending'       
+	)
+    
+	IF @Type = 2
+	BEGIN
+	    INSERT INTO dbo.SessionSwitches
+	    (
+	        FromUserId
+	      , ToUserId
+	      , SessionId
+	      , CreatedTime
+	      , Status
+	      , RelatedSessionSwitchId
+	    )
+	    VALUES
+	    (
+	        @FromUserId
+	      , @ToUserId 
+	      , @ForSessionId
+	      , getdate() 
+	      , N'Pending'
+	      , scope_identity()
+	    )
+	END";
         #endregion
     }
 }

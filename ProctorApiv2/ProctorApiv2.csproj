@@ -233,7 +233,9 @@
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\RolesController.cs" />
     <Compile Include="Controllers\RoomsController.cs" />
+    <Compile Include="Controllers\ScheduleExceptionsController.cs" />
     <Compile Include="Controllers\SessionsController.cs" />
+    <Compile Include="Controllers\SessionSwitcherController.cs" />
     <Compile Include="Controllers\UsersController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -270,6 +272,14 @@
     <Compile Include="Migrations\201812091518542_Allow feed session id to be null.Designer.cs">
       <DependentUpon>201812091518542_Allow feed session id to be null.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201901070033571_Added Session Switch table.cs" />
+    <Compile Include="Migrations\201901070033571_Added Session Switch table.Designer.cs">
+      <DependentUpon>201901070033571_Added Session Switch table.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202109151321269_Additional User Columns.cs" />
+    <Compile Include="Migrations\202109151321269_Additional User Columns.Designer.cs">
+      <DependentUpon>202109151321269_Additional User Columns.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\Application.cs" />
     <Compile Include="Models\ProctorV2Context.cs" />
@@ -277,6 +287,7 @@
     <Compile Include="Models\Room.cs" />
     <Compile Include="Models\ScheduleException.cs" />
     <Compile Include="Models\Session.cs" />
+    <Compile Include="Models\SessionSwitch.cs" />
     <Compile Include="Models\SessionType.cs" />
     <Compile Include="Models\Speaker.cs" />
     <Compile Include="Models\Tag.cs" />
@@ -288,7 +299,9 @@
     <Compile Include="Repositories\ProctorCheckInsRepository.cs" />
     <Compile Include="Repositories\RolesRepository.cs" />
     <Compile Include="Repositories\RoomsRepository.cs" />
+    <Compile Include="Repositories\ScheduleExceptionsRepository.cs" />
     <Compile Include="Repositories\SessionsRepository.cs" />
+    <Compile Include="Repositories\SessionSwitcherRepository.cs" />
     <Compile Include="Repositories\SessionTypesRepository.cs" />
     <Compile Include="Repositories\SpeakersRepository.cs" />
     <Compile Include="Repositories\TagsRepository.cs" />
@@ -337,17 +350,16 @@
     <Content Include="ApplicationInsights.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="Properties\PublishProfiles\cmprod-volunteers-api - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\cmprod-volunteers-api - Web Deploy.pubxml" />
-    <None Include="Properties\PublishProfiles\cmprod-volunteers-api-dev - FTP.pubxml" />
-    <None Include="Properties\PublishProfiles\cmprod-volunteers-api-dev - Web Deploy.pubxml" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />
     <Content Include="Scripts\jquery-1.10.2.min.js" />
     <Content Include="Scripts\modernizr-2.6.2.js" />
     <Content Include="Scripts\respond.js" />
     <Content Include="Scripts\respond.min.js" />
-    <Content Include="Web.config" />
+    <Content Include="Web.config">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </Content>
@@ -402,6 +414,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201812091518542_Allow feed session id to be null.resx">
       <DependentUpon>201812091518542_Allow feed session id to be null.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201901070033571_Added Session Switch table.resx">
+      <DependentUpon>201901070033571_Added Session Switch table.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202109151321269_Additional User Columns.resx">
+      <DependentUpon>202109151321269_Additional User Columns.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

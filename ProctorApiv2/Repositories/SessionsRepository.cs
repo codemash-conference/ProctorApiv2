@@ -43,6 +43,24 @@ namespace ProctorApiv2.Repositories
             ImportSessions();
         }
 
+        public void UpdateFromFeed()
+        {
+            ImportSpeakers();
+            UpdateSessions(); //Inserts sessions into the SessionImport table
+            MarkAsCancelled(); //Compares sessions and sessionsimport tables and cancels sessions;  Then truncates the sessionsimport table.
+        }
+
+        private void MarkAsCancelled()
+        {
+            var spName = "MarkAsCancelled";
+
+            ExecuteStatement(_connStr, (conn, cmd) =>
+            {
+                cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                cmd.CommandText = spName;
+            });
+        }
+
         private void ImportSpeakers()
         {
             using (var webClient = new System.Net.WebClient())
@@ -192,6 +210,51 @@ namespace ProctorApiv2.Repositories
             }
         }
 
+        public bool UpdateSessionsFromFeed()
+        {
+            using (var webClient = new System.Net.WebClient())
+            {
+                var json = webClient.DownloadString(_sessionFeed);
+
+                List<ViewModels.SessionizeSession.RootObject> sessionImport = JsonConvert.DeserializeObject<List<ViewModels.SessionizeSession.RootObject>>(json);
+
+                foreach (ViewModels.SessionizeSession.Session session in sessionImport.FirstOrDefault().sessions)
+                {
+                    if (session.title.IndexOf("cancelled") > -1)
+                    {
+                        var s = 12;
+                    }
+
+                    var mappedSession = MapSession(session);
+                    int x;
+                    if (int.TryParse(mappedSession.FeedSessionId, out x))
+                    {
+                        UpdateExistingSessionInfo(mappedSession);
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        private void UpdateExistingSessionInfo(SessionImport mappedSession)
+        {
+            var spName = "UpdateSessionData";
+
+            ExecuteStatement(_connStr, (conn, cmd) =>
+            {
+                cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                cmd.CommandText = spName;
+
+                cmd.Parameters.AddWithValue("@FeedSessionId", mappedSession.FeedSessionId);
+                cmd.Parameters.AddWithValue("@SessionEndTime", mappedSession.SessionEndTime);
+                cmd.Parameters.AddWithValue("@SessionStartTime", mappedSession.SessionStartTime);
+                cmd.Parameters.AddWithValue("@Title", mappedSession.Title);
+                cmd.Parameters.AddWithValue("@Rooms", mappedSession.Room);
+            });
+
+        }
+
         private void UpsertSpeaker(SpeakerImport speaker)
         {
             var spName = "SpeakerUpsert";
@@ -250,7 +313,10 @@ namespace ProctorApiv2.Repositories
                 cmd.Parameters.AddWithValue("@VolunteersRequired", session.VolunteersRequired);
                 cmd.Parameters.AddWithValue("@Attendees10", session.Attendees10);
                 cmd.Parameters.AddWithValue("@Attendees50", session.Attendees50);
-                cmd.Parameters.AddWithValue("@Notes", session.Notes);
+                if (session.Notes != null)
+                {
+                    cmd.Parameters.AddWithValue("@Notes", session.Notes);
+                }
                 if (session.ActualSessionStartTime != null)
                     cmd.Parameters.AddWithValue("@ActualSessionStartTime", session.ActualSessionStartTime);
 
@@ -282,13 +348,61 @@ namespace ProctorApiv2.Repositories
                 
                 foreach (ViewModels.SessionizeSession.Session session in sessionImport.FirstOrDefault().sessions)
                 {
+                    
                     //session.FeedSessionId = session.Id;
                     //session.Id = 0;
                     var mappedSession = MapSession(session);
-                    UpsertSession(mappedSession);
+                    if (session.title != "Maker Space Projects" 
+                        && session.title != "Maker Space Chit Chat"
+                        && session.isServiceSession != true
+                        && mappedSession.SessionType != "CodeMash Schedule Item"
+                        && mappedSession.SessionType != "Kidz Mash"
+                        && mappedSession.SessionType != "KidzMash Sessionz"
+                        && mappedSession.SessionType != "KidzMash Divez"
+                        && mappedSession.SessionType != "Maker Space"
+                        && mappedSession.SessionType != "Makerspace"
+                        && !string.IsNullOrEmpty(mappedSession.SessionType))
+                    {
+                        try
+                        {
+                            SessionImportFromFeed(mappedSession);
+                        }
+                        catch
+                        {
+
+                        }
+                    }
                 }
             }
         }
+
+        private void UpdateSessions()
+        {
+            using (var webClient = new System.Net.WebClient())
+            {
+                var json = webClient.DownloadString(_sessionFeed);
+
+                List<ViewModels.SessionizeSession.RootObject> sessionImport = JsonConvert.DeserializeObject<List<ViewModels.SessionizeSession.RootObject>>(json);
+
+                foreach (ViewModels.SessionizeSession.Session session in sessionImport.FirstOrDefault().sessions)
+                {
+                    var mappedSession = MapSession(session);
+                    if (session.title != "Maker Space Projects"
+                        && session.title != "Maker Space Chit Chat"
+                        && mappedSession.SessionType != "CodeMash Schedule Item"
+                        && mappedSession.SessionType != "Kidz Mash"
+                        && mappedSession.SessionType != "KidzMash Sessionz"
+                        && mappedSession.SessionType != "KidzMash Divez"
+                        && mappedSession.SessionType != "Maker Space"
+                        && mappedSession.SessionType != "Makerspace"
+                        && !string.IsNullOrEmpty(mappedSession.SessionType))
+                    {
+                        ImportSessionTemp(mappedSession);
+                    }
+                }
+            }
+        }
+
 
         private SessionImport MapSession(ViewModels.SessionizeSession.Session session)
         {
@@ -307,7 +421,8 @@ namespace ProctorApiv2.Repositories
             mappedSession.SessionEndTime = session.endsAt;
             mappedSession.SessionStartTime = session.startsAt;
             mappedSession.SessionTime = session.startsAt;
-            mappedSession.SessionType = sessionFormat == null ? "" : sessionFormat.categoryItems[0].Name;            
+            mappedSession.SessionType = sessionFormat == null ? "" : sessionFormat.categoryItems[0].Name; 
+           
             foreach (var speaker in session.speakers)
             {
                 mappedSession.Speakers.Add(new ViewModels.Speaker() {
@@ -331,6 +446,80 @@ namespace ProctorApiv2.Repositories
         public void UpsertSession(SessionImport session)
         {
             var spName = "SessionUpsert";
+
+            string speakersStr = "";
+
+            string tagsStr = "";
+            session.Speakers.ForEach(s => speakersStr += ',' + s.Id);
+            session.Tags.ForEach(t => tagsStr += ',' + t);
+
+
+            if (string.IsNullOrEmpty(speakersStr)) { speakersStr = ","; }
+            if (string.IsNullOrEmpty(tagsStr)) { tagsStr = ","; }
+
+
+            ExecuteStatement(_connStr, (conn, cmd) =>
+            {
+                cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                cmd.CommandText = spName;
+
+                cmd.Parameters.AddWithValue("@Abstract", session.Abstract);
+                cmd.Parameters.AddWithValue("@Category", session.Category);
+                cmd.Parameters.AddWithValue("@Id", session.Id);
+                cmd.Parameters.AddWithValue("@FeedSessionId", session.FeedSessionId);
+                cmd.Parameters.AddWithValue("@SessionEndTime", session.SessionEndTime);
+                cmd.Parameters.AddWithValue("@SessionStartTime", session.SessionStartTime);
+                cmd.Parameters.AddWithValue("@SessionTime", session.SessionTime);
+                cmd.Parameters.AddWithValue("@SessionType", session.SessionType);
+                cmd.Parameters.AddWithValue("@Title", session.Title);
+                cmd.Parameters.AddWithValue("@Rooms", session.Room);
+                cmd.Parameters.AddWithValue("@Tags", tagsStr.Substring(1));
+                cmd.Parameters.AddWithValue("@Speakers", speakersStr.Substring(1));
+
+                cmd.Parameters.AddWithValue("@VolunteersRequired", 1);
+            });
+
+        }
+
+        public void SessionImportFromFeed(SessionImport session)
+        {
+            var spName = "SessionImportFromFeed";
+
+            string speakersStr = "";
+
+            string tagsStr = "";
+            session.Speakers.ForEach(s => speakersStr += ',' + s.Id);
+            session.Tags.ForEach(t => tagsStr += ',' + t);
+
+
+            if (string.IsNullOrEmpty(speakersStr)) { speakersStr = ","; }
+            if (string.IsNullOrEmpty(tagsStr)) { tagsStr = ","; }
+
+
+            ExecuteStatement(_connStr, (conn, cmd) =>
+            {
+                cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                cmd.CommandText = spName;
+
+                cmd.Parameters.AddWithValue("@Abstract", session.Abstract);
+                cmd.Parameters.AddWithValue("@Category", session.Category);
+                cmd.Parameters.AddWithValue("@FeedSessionId", session.FeedSessionId);
+                cmd.Parameters.AddWithValue("@SessionEndTime", session.SessionEndTime);
+                cmd.Parameters.AddWithValue("@SessionStartTime", session.SessionStartTime);
+                cmd.Parameters.AddWithValue("@SessionTime", session.SessionTime);
+                cmd.Parameters.AddWithValue("@SessionType", session.SessionType);
+                cmd.Parameters.AddWithValue("@Title", session.Title);
+                cmd.Parameters.AddWithValue("@Rooms", session.Room);
+                cmd.Parameters.AddWithValue("@Tags", tagsStr.Substring(1));
+                cmd.Parameters.AddWithValue("@Speakers", speakersStr.Substring(1));
+
+                cmd.Parameters.AddWithValue("@VolunteersRequired", 1);
+            });
+        }
+
+        public void ImportSessionTemp(SessionImport session)
+        {
+            var spName = "SessionImport";
 
             string speakersStr = "";
             
@@ -360,9 +549,13 @@ namespace ProctorApiv2.Repositories
                 cmd.Parameters.AddWithValue("@Rooms", session.Room);
                 cmd.Parameters.AddWithValue("@Tags", tagsStr.Substring(1));
                 cmd.Parameters.AddWithValue("@Speakers", speakersStr.Substring(1));
+
+                cmd.Parameters.AddWithValue("@VolunteersRequired", 1);
             });
 
         }
+
+
 
         public void Delete(int id)
         {
@@ -400,9 +593,10 @@ namespace ProctorApiv2.Repositories
                 cmd.Parameters.AddWithValue("@Abstract", session.Abstract);
                 cmd.Parameters.AddWithValue("@Category", session.Category);
                 cmd.Parameters.AddWithValue("@Id", session.Id);
+                cmd.Parameters.AddWithValue("@FeedSessionId", session.FeedSessionId);
                 cmd.Parameters.AddWithValue("@SessionEndTime", session.SessionEndTime);
                 cmd.Parameters.AddWithValue("@SessionStartTime", session.SessionStartTime);
-                //cmd.Parameters.AddWithValue("@SessionTime", session.SessionTime);
+                cmd.Parameters.AddWithValue("@SessionTime", session.SessionTime);
                 cmd.Parameters.AddWithValue("@SessionType", session.SessionType.Name);
                 cmd.Parameters.AddWithValue("@Title", session.Title);
                 cmd.Parameters.AddWithValue("@Rooms", roomsStr.Substring(1));
@@ -481,7 +675,9 @@ namespace ProctorApiv2.Repositories
 
         public List<SessionResult> GetSessionResults()
         {
-            throw new NotImplementedException();
+            var spName = "SessionGetResults";
+            List<SessionResult> sessionsResults = GetFromSQL<SessionResult>(_connStr, spName, AutoConvert<SessionResult>);
+            return sessionsResults;
         }
     }
 }

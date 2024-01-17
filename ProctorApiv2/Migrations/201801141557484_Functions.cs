@@ -49,6 +49,7 @@ namespace ProctorApiv2.Migrations
 		                    WHERE s.Id = @SessionId) b
 		                    WHERE b.SessionStartTime BETWEEN a.SessionStartTime AND a.SessionEndTime
                                 OR b.SessionEndTime BETWEEN a.SessionStartTime AND a.SessionEndTime
+                                OR (b.SessionStartTime <= a.SessionStartTime AND b.SessionEndTime >= a.SessionEndTime)
 
 	                    IF @CollisionCount > 0
 	                    BEGIN

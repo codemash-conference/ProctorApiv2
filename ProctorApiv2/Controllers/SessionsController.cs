@@ -53,9 +53,16 @@ namespace ProctorApiv2.Controllers
             {
                 return BadRequest();
             }
-
-            _sessionsRepository.Update(id, session);
-            return StatusCode(HttpStatusCode.NoContent);
+            try
+            {
+                _sessionsRepository.Update(id, session);
+                return StatusCode(HttpStatusCode.NoContent);
+            }
+            catch(Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            
         }
 
 
@@ -96,6 +103,14 @@ namespace ProctorApiv2.Controllers
         public IHttpActionResult ImportFromFeed()
         {
             _sessionsRepository.ImportFromFeed();
+            return Ok();
+        }
+
+        [Route("api/Sessions/UpdateFromFeed")]
+        [HttpPut]
+        public IHttpActionResult UpdateFromFeed()
+        {
+            _sessionsRepository.UpdateFromFeed();
             return Ok();
         }
 
@@ -148,6 +163,22 @@ namespace ProctorApiv2.Controllers
         public List<SessionResult> GetSessionResults()
         {
             return _sessionsRepository.GetSessionResults();
+
+        }
+
+        // PUT api/<controller>/Results
+        [Route("api/Sessions/Update")]
+        [HttpPut]
+        public string UpdateSessions()
+        {
+            try
+            {
+                return _sessionsRepository.UpdateSessionsFromFeed().ToString();
+            }
+            catch(Exception ex)
+            {
+                return ex.Message;
+            }
 
         }
     }

@@ -69,7 +69,7 @@ namespace ProctorApiv2.Providers
             }
             catch (Exception ex)
             {
-                context.SetError("Critical Error", "Critical Error logging in");
+                context.SetError("Critical Error", "Critical Error logging in: " + ex.Message);
             }
 
         }

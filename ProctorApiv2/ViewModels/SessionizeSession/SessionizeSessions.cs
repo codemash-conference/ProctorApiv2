@@ -9,7 +9,7 @@ namespace ProctorApiv2.ViewModels.SessionizeSession
     {
         public int id { get; set; }
         public string question { get; set; }
-        public int questionType { get; set; }
+        public string questionType { get; set; }
         public string answer { get; set; }
         public int sort { get; set; }
         public object answerExtra { get; set; }
@@ -38,7 +38,7 @@ namespace ProctorApiv2.ViewModels.SessionizeSession
     public class Session
     {
         public List<QuestionAnswer> questionAnswers { get; set; }
-        public int id { get; set; }
+        public string id { get; set; }
         public string title { get; set; }
         public string description { get; set; }
         public DateTime startsAt { get; set; }

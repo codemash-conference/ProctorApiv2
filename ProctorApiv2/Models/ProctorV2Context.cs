@@ -24,6 +24,7 @@ namespace ProctorApiv2.Models
         public DbSet<ScheduleException> ScheduleExceptions { get; set; }
         public DbSet<SessionType> SessionType { get; set; }
         public DbSet<Application> Application { get; set; }
+        public DbSet<SessionSwitch> SessionSwitch { get; set; }
 
 
 

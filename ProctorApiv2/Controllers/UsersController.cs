@@ -70,12 +70,29 @@ namespace ProctorApiv2.Controllers
             
             var userManager = new ApplicationUserManager(new UserStore<User>(db));
 
-            var newUser = userManager.Create(user, "dothemash18");
+            var newUser = userManager.Create(user, "dothemash24");
 
             if (newUser.Succeeded)
             {
                 userManager.AddToRole(user.Id, "Everyone");
                 userManager.AddToRole(user.Id, "Volunteers");
+            }
+
+            return CreatedAtRoute("DefaultApi", new { id = user.Id }, user);
+        }
+
+        [AllowAnonymous]
+        [ResponseType(typeof(User))]
+        [Route("api/register")]
+        public IHttpActionResult Register(User user)
+        {            
+            var userManager = new ApplicationUserManager(new UserStore<User>(db));
+
+            var newUser = userManager.Create(user, "dothemash24");
+
+            if (newUser.Succeeded)
+            {
+                userManager.AddToRole(user.Id, "Everyone");                
             }
 
             return CreatedAtRoute("DefaultApi", new { id = user.Id }, user);

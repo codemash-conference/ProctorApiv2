@@ -8,6 +8,7 @@ namespace ProctorApiv2.ViewModels
     public class SessionResult
     {
         public int Id { get; set; }
+        public string SessionAlternateId { get; set; }
         public DateTime? SessionStartTime { get; set; }
         public DateTime? SessionEndTime { get; set; }
         public string Rooms { get; set; }
