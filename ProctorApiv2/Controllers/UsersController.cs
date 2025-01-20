@@ -70,7 +70,7 @@ namespace ProctorApiv2.Controllers
             
             var userManager = new ApplicationUserManager(new UserStore<User>(db));
 
-            var newUser = userManager.Create(user, "dothemash24");
+            var newUser = userManager.Create(user, "dothemash25");
 
             if (newUser.Succeeded)
             {
@@ -88,7 +88,7 @@ namespace ProctorApiv2.Controllers
         {            
             var userManager = new ApplicationUserManager(new UserStore<User>(db));
 
-            var newUser = userManager.Create(user, "dothemash24");
+            var newUser = userManager.Create(user, "dothemash25");
 
             if (newUser.Succeeded)
             {

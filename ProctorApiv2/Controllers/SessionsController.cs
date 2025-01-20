@@ -74,10 +74,16 @@ namespace ProctorApiv2.Controllers
             {
                 return BadRequest(ModelState);
             }
+            try
+            {
+                _sessionsRepository.Create(session);
 
-            _sessionsRepository.Create(session);         
-
-            return CreatedAtRoute("DefaultApi", new { id = session.Id }, session);
+                return CreatedAtRoute("DefaultApi", new { id = session.Id }, session);
+            }
+            catch(Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // DELETE: api/Sessions/5

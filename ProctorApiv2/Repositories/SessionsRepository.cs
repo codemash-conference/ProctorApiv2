@@ -367,9 +367,9 @@ namespace ProctorApiv2.Repositories
                         {
                             SessionImportFromFeed(mappedSession);
                         }
-                        catch
+                        catch (Exception ex)
                         {
-
+                            Console.WriteLine(ex.Message);
                         }
                     }
                 }
